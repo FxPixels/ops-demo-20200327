@@ -226,12 +226,8 @@
                 </span>
                 <dropdown-menu slot="dropdown">
                   <dropdown-item class="clearfix mini-text">
-                    评论
+                    设置权限
                     <!-- <badge class="mark" :value="12" /> -->
-                  </dropdown-item>
-                  <dropdown-item class="clearfix mini-text">
-                    回复
-                    <!-- <badge class="mark" :value="3" /> -->
                   </dropdown-item>
                 </dropdown-menu>
               </dropdown>
@@ -1257,11 +1253,11 @@ export default {
         }
 
         .total-deal {
-          width: 180px;
+          width: 200px;
           display: flex;
           flex-direction: column;
           justify-content: center;
-          margin-right: 30px;
+          // margin-right: 30px;
 
           & > p {
             margin-bottom: 10px;
@@ -1281,10 +1277,10 @@ export default {
         }
 
         .total-info {
-          justify-self: end;
           flex: 1;
           display: flex;
           flex-wrap: wrap;
+          justify-content: flex-end;
 
           .total-info-item {
             display: flex;
