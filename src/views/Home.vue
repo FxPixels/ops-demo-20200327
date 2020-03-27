@@ -4,14 +4,17 @@
     <div class="container">
       <div class="left">
         <sections-frame :title="'接口列表'" class="api-list">
-          <Input v-model="value" size="small" placeholder="请输入内容" suffix-icon="el-icon-search"></Input>
+          <Input
+            v-model="value"
+            size="small"
+            placeholder="请输入内容"
+            suffix-icon="el-icon-search"
+          ></Input>
 
           <div class="tree-title">
             <p>全部接口</p>
 
-            <p>
-              <i class="el-icon-folder-add"></i> 新建分类
-            </p>
+            <p><i class="el-icon-folder-add"></i> 新建分类</p>
           </div>
 
           <div class="tree">
@@ -26,21 +29,41 @@
 
             <div class="block">
               <div class="tree-component">
-                <Tree :data="data" node-key="id" default-expand-all :expand-on-click-node="false">
+                <Tree
+                  :data="data"
+                  node-key="id"
+                  default-expand-all
+                  :expand-on-click-node="false"
+                >
                   <span class="custom-tree-node" slot-scope="{ node, data }">
                     <span>
-                      <i v-if="node.label.indexOf('一') != -1" class="el-icon-folder-opened"></i>
+                      <i
+                        v-if="node.label.indexOf('一') != -1"
+                        class="el-icon-folder-opened"
+                      ></i>
                       <i v-else class="el-icon-document"></i>
                       {{ node.label }}
                     </span>
                     <span>
-                      <Button type="text" size="small" @click="() => append(data)">
+                      <Button
+                        type="text"
+                        size="small"
+                        @click="() => append(data)"
+                      >
                         <i class="el-icon-edit-outline"></i>
                       </Button>
-                      <Button type="text" size="small" @click="() => append(data)">
+                      <Button
+                        type="text"
+                        size="small"
+                        @click="() => append(data)"
+                      >
                         <i class="el-icon-circle-plus-outline"></i>
                       </Button>
-                      <Button type="text" size="small" @click="() => remove(node, data)">
+                      <Button
+                        type="text"
+                        size="small"
+                        @click="() => remove(node, data)"
+                      >
                         <i class="el-icon-circle-close"></i>
                       </Button>
                     </span>
@@ -56,7 +79,8 @@
           <div class="total">
             <div class="total-chart">
               <Progress
-                :stroke-width="12"
+                :width="95"
+                :stroke-width="8"
                 type="dashboard"
                 :percentage="percentage"
                 :color="colors"
@@ -69,7 +93,9 @@
                 <span>5</span>
                 个安全漏洞
               </p>
-              <p>您的资产已存在安全隐患，可能被病毒或是黑客入侵主机，请您尽快处理。</p>
+              <p>
+                您的资产已存在安全隐患，可能被病毒或是黑客入侵主机，请您尽快处理。
+              </p>
               <p>
                 <Button type="primary" size="small">立即处理</Button>
               </p>
@@ -121,12 +147,14 @@
         <sections-frame :title="'接口拓扑图'" class="topology-frame">
           <div class="topology">
             <div id="mountNode"></div>
-            <div class="topology-tip">
-              <p>
-                <i class="el-icon-warning-outline"></i>
-                按住 Shift + 鼠标左键点击可进行多选，按住 Ctrl + 鼠标左键拖动可进行框选，鼠标滚轮可放大缩小视图。
-              </p>
-            </div>
+          </div>
+
+          <div class="topology-tip" slot="title-right">
+            <p>
+              <i class="el-icon-warning-outline"></i>
+              按住 Shift + 鼠标左键点击可进行多选，按住 Ctrl +
+              鼠标左键拖动可进行框选，鼠标滚轮可放大缩小视图。
+            </p>
           </div>
         </sections-frame>
       </div>
@@ -174,7 +202,10 @@
                 </div>
               </message-item>
               <message-item>
-                <div class>admin: 每周一更新接口，故先停止接口，按照规定对该接口进行检查，虽然检查不出什么毛病。</div>
+                <div class>
+                  admin:
+                  每周一更新接口，故先停止接口，按照规定对该接口进行检查，虽然检查不出什么毛病。
+                </div>
               </message-item>
             </div>
           </div>
@@ -322,8 +353,8 @@ export default {
     return {
       value: "",
       data: JSON.parse(JSON.stringify(data)),
-      radio: "1",
-      percentage: 70,
+      radio: "压力状态",
+      percentage: 75,
       colors: [
         { color: "#37A6E7", percentage: 20 },
         { color: "#1989fa", percentage: 80 },
@@ -1308,13 +1339,13 @@ export default {
           position: relative;
           height: 100%;
         }
-
-        .topology-tip {
-          position: absolute;
-          bottom: 3px;
-          right: 0;
-          font-size: 13px;
-        }
+      }
+      .topology-tip {
+        // position: absolute;
+        // bottom: 3px;
+        // right: 0;
+        font-size: 12px;
+        font-weight: normal;
       }
     }
 
