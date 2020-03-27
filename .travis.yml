@@ -5,3 +5,15 @@ node_js:
 branchs:
   only:
   - master  #指定只有检测到master分支有变动时才执行任务
+
+services:
+  - docker
+
+before_install:
+  - npm install
+
+script:
+  - npm run build
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME"  --password-stdin
+  - docker build -t fxpixels/ops-demo-20200327:latest .
+  - docker push fxpixels/ops-demo-20200327:latest
