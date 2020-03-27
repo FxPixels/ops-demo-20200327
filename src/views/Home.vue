@@ -634,6 +634,11 @@ export default {
     this.setChart_2();
     this.setTopology();
 
+    let minimapEl = $(".minimap");
+    minimapEl.append(`
+      <p class="mini-text" style="text-align:center">缩略图</p>
+    `);
+
     let el = $(".el-progress__text");
     el.html(`
       <div>
@@ -1017,6 +1022,7 @@ export default {
         position: absolute;
         left: 0;
         top: 10px;
+        border: 1px solid rgba(55, 166, 231, 0.5);
       }
 
       .g6-tooltip {
