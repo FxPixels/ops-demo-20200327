@@ -142,9 +142,29 @@
 
           <div class="topology-tip" slot="title-right">
             <p>
-              <i class="el-icon-warning-outline"></i>
-              按住 Shift + 鼠标左键点击可进行多选，按住 Ctrl +
-              鼠标左键拖动可进行框选，鼠标滚轮可放大缩小视图。
+              <Popover
+                placement="top"
+                title="操作提示"
+                trigger="hover"
+              >
+                <div class="topology-tip-content">
+                  <p>1、按住 Shift + 鼠标左键点击可进行多选；
+                  </p>
+
+                  <p>2、按住 Ctrl + 鼠标左键拖动可进行框选；</p>
+
+                  <p>3、鼠标滚轮可放大缩小视图。</p>
+                </div>
+                <div slot="reference">
+                  <span>操作提示</span>
+                  <i class="el-icon-magic-stick"></i>
+                </div>
+              </Popover>
+            </p>
+
+            <p>
+              <span>设置</span>
+              <i class="el-icon-setting"></i>
             </p>
           </div>
         </sections-frame>
@@ -242,13 +262,14 @@ import {
   RadioButton,
   DropdownMenu,
   DropdownItem,
-  Dropdown
+  Dropdown,
+  Popover
 } from "element-ui";
 import sectionsFrame from "../components/sections.vue";
 import navbar from "../components/navbar.vue";
 import messageItem from "../components/message_item.vue";
-import charts from "../components/charts.vue"
-import topology from "../components/topology.vue"
+import charts from "../components/charts.vue";
+import topology from "../components/topology.vue";
 import $ from "jquery";
 
 let id = 1000;
@@ -269,7 +290,8 @@ export default {
     Dropdown,
     messageItem,
     charts,
-    topology
+    topology,
+    Popover
   },
   data() {
     const data = [
@@ -346,8 +368,7 @@ export default {
         { color: "#37A6E7", percentage: 20 },
         { color: "#1989fa", percentage: 80 },
         { color: "#6f7ad3", percentage: 100 }
-      ],
-      
+      ]
     };
   },
   mounted() {
@@ -373,8 +394,7 @@ export default {
       const children = parent.data.children || parent.data;
       const index = children.findIndex(d => d.id === data.id);
       children.splice(index, 1);
-    },
-    
+    }
   }
 };
 </script>
@@ -433,9 +453,9 @@ export default {
       .g6-tooltip {
         padding: 8px;
         color: #444;
-        border: 1px solid #eee;
-        box-shadow: 1px 1px 7px #eee;
+        box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
         border-radius: 5px;
+        border: 1px solid #ebeef5;
         background-color: rgba(255, 255, 255, 0.8);
 
         .g6-tooltip-html {
@@ -498,6 +518,14 @@ export default {
 .mini-text {
   font-size: 12px !important;
   line-height: 24px !important;
+}
+
+.el-popover__title {
+  font-size: 14px !important;
+}
+
+.topology-tip-content {
+  font-size: 12px !important;
 }
 </style>
 
@@ -708,18 +736,26 @@ export default {
       .topology {
         position: relative;
         height: 100%;
-
-        #mountNode {
-          position: relative;
-          height: 100%;
-        }
       }
+
       .topology-tip {
         // position: absolute;
         // bottom: 3px;
         // right: 0;
-        font-size: 12px;
+        font-size: 13px;
         font-weight: normal;
+        color: #3092cb;
+        display: flex;
+        line-height: 0;
+
+        & > p {
+          margin-left: 15px;
+          cursor: pointer;
+
+          span {
+            padding-right: 5px;
+          }
+        }
       }
     }
 

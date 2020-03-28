@@ -36,15 +36,15 @@ export default {
   background-color: #fff;
   margin-bottom: 15px;
   transition: 0.3s;
-  // outline-color: rgba(55, 166, 231, 0.3);
+  outline-color: #ebeef5;
   border-radius: 5px;
-  overflow: hidden;
+  // overflow: hidden;
   // outline-radius: 5px;
   // height: 100%;
 
   &:hover {
-    box-shadow: 5px 5px 5px #eee;
-    // outline: 1px solid rgba(55, 166, 231, 0.5);
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    outline: 1px solid #ebeef5;
   }
 
   .sections-title {

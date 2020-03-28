@@ -1,15 +1,42 @@
 <template>
-  <div id="mountNode"></div>
+  <div style="width:100%; height:100%;">
+    <div id="mountNode"></div>
+    <div class="topology-node-tools">
+      <!-- <span>工具栏</span> -->
+      <!-- <Button size="mini" type="primary" icon="el-icon-circle-plus-outline"
+        >新增节点</Button
+      > -->
+      <Button size="mini" type="primary" icon="el-icon-sort">连接节点</Button>
+    </div>
+
+    <transition name="el-zoom-in-top">
+      <div class="topology-contextmenu" v-show="showContextmenu">
+        <p v-if="showContextmenuType == ''">新建节点</p>
+        <p v-if="showContextmenuType == 'node'">修改节点</p>
+        <p v-if="showContextmenuType == 'node'">删除节点</p>
+      </div>
+    </transition>
+  </div>
 </template>
 <script>
 import G6, { Minimap } from "@antv/g6";
 const Util = G6.Util;
 const facility = require("../assets/images/数据库.png"); //设备
 import $ from "jquery";
+import { Button } from "element-ui";
+import CollapseTransition from "element-ui/lib/transitions/collapse-transition";
+import "element-ui/lib/theme-chalk/base.css";
 
 export default {
+  components: {
+    Button,
+    CollapseTransition
+  },
   data() {
     return {
+      showContextmenu: false,
+      addedCount: 15,
+      showContextmenuType: "node",
       g6Data: {
         // 点集
         nodes: [
@@ -313,6 +340,29 @@ export default {
   },
   methods: {
     setTopology() {
+      // Register a custom behavior: add a node when user click the blank part of canvas
+      G6.registerBehavior("click-add-node", {
+        // Set the events and the corresponding responsing function for this behavior
+        getEvents() {
+          // The event is canvas:click, the responsing function is onClick
+          return {
+            "canvas:click": "onClick"
+          };
+        },
+        // Click event
+        onClick(ev) {
+          const self = this;
+          const graph = self.graph;
+          // Add a new node
+          graph.addItem("node", {
+            x: ev.canvasX,
+            y: ev.canvasY,
+            id: `node-${this.addedCount}` // Generate the unique id
+          });
+          this.addedCount++;
+        }
+      });
+
       G6.registerNode(
         "myimg",
         {
@@ -505,6 +555,33 @@ export default {
           }
         }
       });
+
+      graph.on("click", evt => {
+        evt.preventDefault();
+        evt.stopPropagation();
+        this.showContextmenuType = "";
+        this.showContextmenu = false;
+      });
+
+      graph.on("contextmenu", evt => {
+        evt.preventDefault();
+        evt.stopPropagation();
+
+        $(".topology-contextmenu").css("top", evt.canvasY + "px");
+        $(".topology-contextmenu").css("left", evt.canvasX + "px");
+        this.showContextmenuType = "";
+        this.showContextmenu = true;
+      });
+
+      graph.on("node:contextmenu", evt => {
+        evt.preventDefault();
+        evt.stopPropagation();
+        $(".topology-contextmenu").css("top", evt.canvasY + "px");
+        $(".topology-contextmenu").css("left", evt.canvasX + "px");
+        this.showContextmenuType = "node";
+        this.showContextmenu = true;
+      });
+
       graph.on("node:mouseenter", function(evt) {
         const node = evt.item;
         const model = node.getModel();
@@ -538,6 +615,52 @@ export default {
     minimapEl.append(`
       <p class="mini-text" style="text-align:center">缩略图</p>
     `);
+
+    let cavEl = $("#mountNode");
+    cavEl.append(`
+      
+    `);
   }
 };
 </script>
+
+<style lang="less">
+#mountNode {
+  position: relative;
+  height: 100%;
+}
+
+.topology-node-tools {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 13px;
+
+  .el-button--mini {
+    padding: 6px;
+  }
+}
+
+.topology-contextmenu {
+  background-color: #fff;
+  padding: 10px 0;
+  position: absolute;
+  font-size: 12px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  border: 1px solid #EBEEF5;
+  min-width: 88px;
+  z-index: 100;
+
+  & > p {
+    padding: 0px 20px;
+    line-height: 24px;
+
+    &:hover {
+      background-color: #edf5ff;
+      color: #66b1ff;
+      cursor: pointer;
+    }
+  }
+}
+</style>
