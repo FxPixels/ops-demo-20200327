@@ -6,14 +6,30 @@
       <!-- <Button size="mini" type="primary" icon="el-icon-circle-plus-outline"
         >新增节点</Button
       > -->
-      <Button size="mini" type="primary" icon="el-icon-sort">连接节点</Button>
+      <!-- <Button size="mini" type="primary" icon="el-icon-sort">连接节点</Button> -->
     </div>
 
     <transition name="el-zoom-in-top">
       <div class="topology-contextmenu" v-show="showContextmenu">
-        <p v-if="showContextmenuType == ''">新建节点</p>
-        <p v-if="showContextmenuType == 'node'">修改节点</p>
-        <p v-if="showContextmenuType == 'node'">删除节点</p>
+        <p v-if="showContextmenuType == ''" @click="createNewNode">新建节点</p>
+        <p v-if="showContextmenuType == 'node' && selectedtype == 'normal'">
+          修改该节点
+        </p>
+        <p
+          v-if="showContextmenuType == 'node' && selectedtype == 'normal'"
+          @click="removeNodes"
+        >
+          删除该节点
+        </p>
+        <!-- <p v-if="showContextmenuType == 'node' && selectedtype == 'multi'">
+          取消节点之间连接
+        </p> -->
+        <p
+          v-if="showContextmenuType == 'node' && selectedtype == 'multi'"
+          @click="removeNodes"
+        >
+          删除所选节点
+        </p>
       </div>
     </transition>
   </div>
@@ -35,8 +51,12 @@ export default {
   data() {
     return {
       showContextmenu: false,
-      addedCount: 15,
-      showContextmenuType: "node",
+      addedCount: 50,
+      showContextmenuType: "",
+      selectedtype: "normal",
+      graph: null,
+      mouseInfo: null,
+      selectedNodes: [],
       g6Data: {
         // 点集
         nodes: [
@@ -341,27 +361,6 @@ export default {
   methods: {
     setTopology() {
       // Register a custom behavior: add a node when user click the blank part of canvas
-      G6.registerBehavior("click-add-node", {
-        // Set the events and the corresponding responsing function for this behavior
-        getEvents() {
-          // The event is canvas:click, the responsing function is onClick
-          return {
-            "canvas:click": "onClick"
-          };
-        },
-        // Click event
-        onClick(ev) {
-          const self = this;
-          const graph = self.graph;
-          // Add a new node
-          graph.addItem("node", {
-            x: ev.canvasX,
-            y: ev.canvasY,
-            id: `node-${this.addedCount}` // Generate the unique id
-          });
-          this.addedCount++;
-        }
-      });
 
       G6.registerNode(
         "myimg",
@@ -489,7 +488,7 @@ export default {
       let nodeW = $("#mountNode").width();
       let nodeH = $("#mountNode").height();
 
-      const graph = new G6.Graph({
+      this.graph = new G6.Graph({
         container: "mountNode", // String | HTMLElement，必须，在 Step 1 中创建的容器 id 或容器本身
         width: nodeW, // Number，必须，图的宽度
         height: nodeH, // Number，必须，图的高度
@@ -506,14 +505,18 @@ export default {
             {
               type: "brush-select",
               includeEdges: false,
-              trigger: "ctrl"
+              // trigger: "ctrl",
+              onSelect: nodes => {
+                this.selectedNodes = nodes;
+                this.selectedtype = "multi";
+              }
             },
             {
               type: "tooltip",
               formatText(model) {
                 // console.log(model);
                 return `
-                <div class="g6-tooltip-html">
+                <div class="g6-tooltip-html" id="g6-tooltip-${model.id}">
                   <div>
                       <i class="el-icon-coin"></i>
                     <span>
@@ -528,6 +531,14 @@ export default {
               }
             }
           ]
+        },
+        nodeStateStyles: {
+          // The node styles in selected state
+          selected: {
+            stroke: "#666",
+            lineWidth: 2,
+            fill: "steelblue"
+          }
         },
 
         layout: {
@@ -556,37 +567,49 @@ export default {
         }
       });
 
-      graph.on("click", evt => {
-        evt.preventDefault();
+      this.graph.on("canvas:click", evt => {
+        // evt.preventDefault();
         evt.stopPropagation();
         this.showContextmenuType = "";
         this.showContextmenu = false;
+        this.graph.setMode("default");
+        this.selectedtype = "normal";
+        this.selectedNodes = [];
       });
 
-      graph.on("contextmenu", evt => {
+      this.graph.on("canvas:contextmenu", evt => {
         evt.preventDefault();
         evt.stopPropagation();
+
+        // this.selectedtype = "normal";
 
         $(".topology-contextmenu").css("top", evt.canvasY + "px");
         $(".topology-contextmenu").css("left", evt.canvasX + "px");
         this.showContextmenuType = "";
+        this.selectedNodes = [];
+        this.mouseInfo = evt;
         this.showContextmenu = true;
       });
 
-      graph.on("node:contextmenu", evt => {
+      this.graph.on("node:contextmenu", evt => {
         evt.preventDefault();
         evt.stopPropagation();
         $(".topology-contextmenu").css("top", evt.canvasY + "px");
         $(".topology-contextmenu").css("left", evt.canvasX + "px");
         this.showContextmenuType = "node";
+        if (this.selectedtype == "normal") {
+          this.selectedNodes = [];
+          this.selectedNodes.push(evt.item);
+        }
+
         this.showContextmenu = true;
       });
 
-      graph.on("node:mouseenter", function(evt) {
+      this.graph.on("node:mouseenter", evt => {
         const node = evt.item;
         const model = node.getModel();
         model.oriLabel = model.label;
-        graph.setItemState(node, "hover", true);
+        this.graph.setItemState(node, "hover", true);
         // graph.updateItem(node, {
         //   preRect: {
         //     show: true
@@ -594,18 +617,58 @@ export default {
         // });
       });
 
-      graph.on("node:mouseleave", function(evt) {
+      this.graph.on("node:mouseleave", evt => {
         const node = evt.item;
         const model = node.getModel();
-        graph.setItemState(node, "hover", false);
+        this.graph.setItemState(node, "hover", false);
         // graph.updateItem(node, {
         //   preRect: {
         //     show: true
         //   }
         // });
       });
-      graph.data(this.g6Data); // 读取 Step 2 中的数据源到图上
-      graph.render(); // 渲染图
+      this.graph.data(this.g6Data); // 读取 Step 2 中的数据源到图上
+      this.graph.render(); // 渲染图
+    },
+    createNewNode() {
+      this.graph.addItem("node", {
+        id: "node" + this.addedCount, // String，该节点存在则必须，节点的唯一标识
+        label: "服务器" + this.addedCount,
+        img: facility,
+        type: "myimg",
+        size: 70,
+        labelCfg: {
+          style: {
+            fontSize: 14
+          }
+        },
+        x: this.mouseInfo.x, // Number，可选，节点位置的 x 值
+        y: this.mouseInfo.y // Number，可选，节点位置的 y 值
+      });
+
+      this.addedCount++;
+      this.showContextmenu = false;
+      this.showContextmenuType = "";
+
+      this.graph.paint();
+      this.graph.setAutoPaint(true);
+    },
+    removeNodes() {
+      for (let i = 0; i < this.selectedNodes.length; i++) {
+        let item = this.selectedNodes[i].defaultCfg;
+        this.graph.removeItem(item.id);
+        $(`#g6-tooltip-${item.id}`)
+          .parent()
+          .remove();
+      }
+
+      this.selectedNodes = [];
+
+      this.showContextmenu = false;
+      this.showContextmenuType = "";
+
+      this.graph.paint();
+      this.graph.setAutoPaint(true);
     }
   },
   mounted() {
@@ -614,11 +677,6 @@ export default {
     let minimapEl = $(".minimap");
     minimapEl.append(`
       <p class="mini-text" style="text-align:center">缩略图</p>
-    `);
-
-    let cavEl = $("#mountNode");
-    cavEl.append(`
-      
     `);
   }
 };
@@ -648,7 +706,7 @@ export default {
   font-size: 12px;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
   border-radius: 5px;
-  border: 1px solid #EBEEF5;
+  border: 1px solid #ebeef5;
   min-width: 88px;
   z-index: 100;
 
