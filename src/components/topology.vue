@@ -21,9 +21,19 @@
         >
           删除该节点
         </p>
-        <!-- <p v-if="showContextmenuType == 'node' && selectedtype == 'multi'">
-          取消节点之间连接
-        </p> -->
+        <p v-if="showContextmenuType == 'edge'" @click="removeEdge">
+          删除该连接
+        </p>
+        <p
+          v-if="
+            showContextmenuType == 'node' &&
+              selectedtype == 'multi' &&
+              selectedNodes.length == 2
+          "
+          @click="createEdge"
+        >
+          从另一个节点连接到本节点
+        </p>
         <p
           v-if="showContextmenuType == 'node' && selectedtype == 'multi'"
           @click="removeNodes"
@@ -57,6 +67,8 @@ export default {
       graph: null,
       mouseInfo: null,
       selectedNodes: [],
+      selectedTargetNode: null,
+      selectedEdge: null,
       g6Data: {
         // 点集
         nodes: [
@@ -432,12 +444,42 @@ export default {
         "image"
       );
 
+      G6.registerNode(
+        "DomNode",
+        {
+          draw: (cfg, group) => {
+            const size = cfg.size;
+            console.log(cfg);
+            return group.addShape("dom", {
+              attrs: {
+                width: size,
+                height: size + 20,
+                // 传入 DOM 的 html
+                html: `
+                <div>
+                    <img src="${cfg.img}"/>
+                    <p>${cfg.label}</p>
+                </div>
+                `
+              },
+              name: "dom-shape",
+              draggable: true
+            });
+          }
+        },
+        // 注意这里继承了 'single-edge'
+        "single-node"
+      );
+
       G6.registerEdge(
         "circle-running",
         {
           afterDraw(cfg, group) {
             // 获得当前边的第一个图形，这里是边本身的 path
             const shape = group.get("children")[0];
+            const sline = group.get("children")[1];
+            sline.attr("cursor", "pointer");
+            console.log(group.get("children"));
             // 边 path 的起点位置
             const startPoint = shape.getPoint(0);
 
@@ -473,6 +515,7 @@ export default {
         },
         "line"
       );
+      const grid = new G6.Grid();
       const minimap = new Minimap({
         // container: "minimap",
         size: [100, 100],
@@ -495,7 +538,8 @@ export default {
         fitView: true,
         // fitViewPadding: [20, 40, 50, 20],
         autoPaint: true,
-        plugins: [minimap],
+        plugins: [minimap, grid],
+        renderer: "svg",
         modes: {
           default: [
             "drag-canvas",
@@ -531,14 +575,6 @@ export default {
               }
             }
           ]
-        },
-        nodeStateStyles: {
-          // The node styles in selected state
-          selected: {
-            stroke: "#666",
-            lineWidth: 2,
-            fill: "steelblue"
-          }
         },
 
         layout: {
@@ -600,8 +636,28 @@ export default {
         if (this.selectedtype == "normal") {
           this.selectedNodes = [];
           this.selectedNodes.push(evt.item);
+        } else if (
+          this.selectedNodes.length == 2 &&
+          this.selectedtype == "multi"
+        ) {
+          this.selectedTargetNode = evt.item;
         }
 
+        this.showContextmenu = true;
+      });
+
+      this.graph.on("edge:contextmenu", evt => {
+        evt.preventDefault();
+        evt.stopPropagation();
+
+        // this.selectedtype = "normal";
+
+        $(".topology-contextmenu").css("top", evt.canvasY + "px");
+        $(".topology-contextmenu").css("left", evt.canvasX + "px");
+        this.showContextmenuType = "edge";
+        this.selectedEdge = evt.item;
+        // console.log(evt)
+        this.mouseInfo = evt;
         this.showContextmenu = true;
       });
 
@@ -637,6 +693,8 @@ export default {
         img: facility,
         type: "myimg",
         size: 70,
+        // name: "node" + this.addedCount,
+        // draggable: true,
         labelCfg: {
           style: {
             fontSize: 14
@@ -669,6 +727,59 @@ export default {
 
       this.graph.paint();
       this.graph.setAutoPaint(true);
+    },
+    createEdge() {
+      let sourceNodeId = null;
+      let index = null;
+      for (let i = 0; i < this.selectedNodes.length; i++) {
+        if (
+          this.selectedTargetNode.defaultCfg.id ==
+          this.selectedNodes[i].defaultCfg.id
+        ) {
+          index = i;
+        }
+      }
+
+      if (index == 1) {
+        sourceNodeId = this.selectedNodes[0].defaultCfg.id;
+      } else if (index == 0) {
+        sourceNodeId = this.selectedNodes[1].defaultCfg.id;
+      }
+
+      this.graph.addItem("edge", {
+        source: sourceNodeId, // String，必须，起始点 id
+        target: this.selectedTargetNode.defaultCfg.id, // String，必须，目标点 id
+        // style: {
+        //   endArrow: true,
+        //   // stroke: "RGB(95,99,104)",
+        //   lineWidth: 3
+        // },
+        label: "连接" + this.addedCount,
+        labelCfg: {
+          autoRotate: true,
+          refY: 10,
+          style: {
+            fontSize: 14
+          }
+        }
+      });
+
+      this.addedCount++;
+      this.showContextmenu = false;
+      this.showContextmenuType = "";
+      this.selectedTargetNode = null;
+
+      this.graph.paint();
+      this.graph.setAutoPaint(true);
+    },
+    removeEdge() {
+      this.graph.removeItem(this.selectedEdge.defaultCfg.id);
+      
+      this.selectedEdge = null;
+      this.showContextmenu = false;
+      this.showContextmenuType = "";
+      this.graph.paint();
+      this.graph.setAutoPaint(true);
     }
   },
   mounted() {
@@ -686,6 +797,10 @@ export default {
 #mountNode {
   position: relative;
   height: 100%;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .topology-node-tools {

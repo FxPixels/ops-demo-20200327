@@ -637,6 +637,7 @@ export default {
     .center {
       // width: 60%;
       width: 750px;
+      flex-shrink: 0;
       display: flex;
       flex-direction: column;
 
