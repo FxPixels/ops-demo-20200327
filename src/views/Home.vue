@@ -142,20 +142,19 @@
 
           <div class="topology-tip" slot="title-right">
             <p>
-              <Popover
-                placement="top"
-                title="操作提示"
-                trigger="hover"
-              >
+              <Popover placement="top" title="操作提示" trigger="hover">
                 <div class="topology-tip-content">
-                  <p>1、按住 Shift + 鼠标左键点击可进行多选；
-                  </p>
+                  <p>1、按住 Shift + 鼠标左键点击可进行多选；</p>
 
-                  <p>2、按住 Shift + 鼠标左键拖动可进行框选；</p>
+                  <p>
+                    2、按住 Shift +
+                    鼠标左键拖动可进行框选，选择两个节点进行框选可以进行连接；
+                  </p>
 
                   <p>3、鼠标滚轮可放大缩小视图。</p>
 
                   <p>4、在连接线、节点、空白处鼠标右键均可出现相应操作菜单。</p>
+                  <p>5、常用模式可以拖动节点位置，而连线模式则方便于快速连线。</p>
                 </div>
                 <div slot="reference">
                   <span>操作提示</span>

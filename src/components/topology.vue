@@ -3,15 +3,41 @@
     <div id="mountNode"></div>
     <div class="topology-node-tools">
       <!-- <span>工具栏</span> -->
-      <!-- <Button size="mini" type="primary" icon="el-icon-circle-plus-outline"
-        >新增节点</Button
+      <!-- <Button
+        size="mini"
+        type="primary"
+        icon="el-icon-circle-plus-outline"
+        @click="setMode('default')"
+        :plain="modeType != 'default'"
+        >常用模式</Button
+      >
+      <Button
+        size="mini"
+        type="primary"
+        icon="el-icon-sort"
+        @click="setMode('addEdge')"
+        >连线模式</Button
       > -->
-      <!-- <Button size="mini" type="primary" icon="el-icon-sort">连接节点</Button> -->
+
+      <radio-group v-model="modeType" size="mini" @change="modeChange">
+        <radio :label="'default'" border>常用模式</radio>
+        <radio :label="'addEdge'" border>连线模式</radio>
+        <!-- <radio :label="'addNode'" border>节点模式</radio> -->
+        <!-- <radio :label="9">备选项</radio> -->
+      </radio-group>
     </div>
 
     <transition name="el-zoom-in-top">
       <div class="topology-contextmenu" v-show="showContextmenu">
-        <p v-if="showContextmenuType == ''" @click="createNewNode">新建节点</p>
+        <p v-if="showContextmenuType == ''" @click="createNewNode">
+          新建一个节点
+        </p>
+        <p
+          v-if="showContextmenuType == 'node' && selectedtype == 'normal'"
+          @click="createNewNodeAfterThisNode"
+        >
+          在本节点之后新建一个节点
+        </p>
         <p v-if="showContextmenuType == 'node' && selectedtype == 'normal'">
           修改该节点
         </p>
@@ -45,18 +71,20 @@
   </div>
 </template>
 <script>
-import G6, { Minimap } from "@antv/g6";
+import G6, { Minimap, Grid } from "@antv/g6";
 const Util = G6.Util;
 const facility = require("../assets/images/数据库.png"); //设备
 import $ from "jquery";
-import { Button } from "element-ui";
+import { Button, Radio, RadioGroup } from "element-ui";
 import CollapseTransition from "element-ui/lib/transitions/collapse-transition";
 import "element-ui/lib/theme-chalk/base.css";
 
 export default {
   components: {
     Button,
-    CollapseTransition
+    CollapseTransition,
+    Radio,
+    RadioGroup
   },
   data() {
     return {
@@ -69,6 +97,7 @@ export default {
       selectedNodes: [],
       selectedTargetNode: null,
       selectedEdge: null,
+      modeType: "default",
       g6Data: {
         // 点集
         nodes: [
@@ -101,7 +130,7 @@ export default {
                 fontSize: 14
               }
             }
-            // x: 300, // Number，可选，节点位置的 x 值
+            // x: 700, // Number，可选，节点位置的 x 值
             // y: 200 // Number，可选，节点位置的 y 值
           },
           {
@@ -115,7 +144,7 @@ export default {
                 fontSize: 14
               }
             }
-            // x: 300, // Number，可选，节点位置的 x 值
+            // x: 700, // Number，可选，节点位置的 x 值
             // y: 200 // Number，可选，节点位置的 y 值
           },
           {
@@ -129,7 +158,7 @@ export default {
                 fontSize: 14
               }
             }
-            // x: 300, // Number，可选，节点位置的 x 值
+            // x: 700, // Number，可选，节点位置的 x 值
             // y: 200 // Number，可选，节点位置的 y 值
           },
           {
@@ -143,7 +172,7 @@ export default {
                 fontSize: 14
               }
             }
-            // x: 300, // Number，可选，节点位置的 x 值
+            // x: 700, // Number，可选，节点位置的 x 值
             // y: 200 // Number，可选，节点位置的 y 值
           },
           {
@@ -157,7 +186,7 @@ export default {
                 fontSize: 14
               }
             }
-            // x: 300, // Number，可选，节点位置的 x 值
+            // x: 700, // Number，可选，节点位置的 x 值
             // y: 200 // Number，可选，节点位置的 y 值
           },
           {
@@ -171,7 +200,7 @@ export default {
                 fontSize: 14
               }
             }
-            // x: 300, // Number，可选，节点位置的 x 值
+            // x: 700, // Number，可选，节点位置的 x 值
             // y: 200 // Number，可选，节点位置的 y 值
           },
           {
@@ -185,7 +214,7 @@ export default {
                 fontSize: 14
               }
             }
-            // x: 300, // Number，可选，节点位置的 x 值
+            // x: 700, // Number，可选，节点位置的 x 值
             // y: 200 // Number，可选，节点位置的 y 值
           },
           {
@@ -199,7 +228,7 @@ export default {
                 fontSize: 14
               }
             }
-            // x: 300, // Number，可选，节点位置的 x 值
+            // x: 700, // Number，可选，节点位置的 x 值
             // y: 200 // Number，可选，节点位置的 y 值
           },
           {
@@ -213,7 +242,7 @@ export default {
                 fontSize: 14
               }
             }
-            // x: 300, // Number，可选，节点位置的 x 值
+            // x: 700, // Number，可选，节点位置的 x 值
             // y: 200 // Number，可选，节点位置的 y 值
           },
           {
@@ -227,7 +256,7 @@ export default {
                 fontSize: 14
               }
             }
-            // x: 300, // Number，可选，节点位置的 x 值
+            // x: 700, // Number，可选，节点位置的 x 值
             // y: 200 // Number，可选，节点位置的 y 值
           },
           {
@@ -241,7 +270,7 @@ export default {
                 fontSize: 14
               }
             }
-            // x: 300, // Number，可选，节点位置的 x 值
+            // x: 700, // Number，可选，节点位置的 x 值
             // y: 200 // Number，可选，节点位置的 y 值
           }
         ],
@@ -373,6 +402,7 @@ export default {
   methods: {
     setTopology() {
       // Register a custom behavior: add a node when user click the blank part of canvas
+      const that = this;
 
       G6.registerNode(
         "myimg",
@@ -449,7 +479,7 @@ export default {
         {
           draw: (cfg, group) => {
             const size = cfg.size;
-            console.log(cfg);
+            // console.log(cfg);
             return group.addShape("dom", {
               attrs: {
                 width: size,
@@ -478,8 +508,9 @@ export default {
             // 获得当前边的第一个图形，这里是边本身的 path
             const shape = group.get("children")[0];
             const sline = group.get("children")[1];
-            sline.attr("cursor", "pointer");
-            console.log(group.get("children"));
+
+            // sline.attr("cursor", "pointer");
+            console.log(group.get("children")[1]);
             // 边 path 的起点位置
             const startPoint = shape.getPoint(0);
 
@@ -515,10 +546,80 @@ export default {
         },
         "line"
       );
-      const grid = new G6.Grid();
+
+      // Register a custom behavior: click two end nodes to add an edge
+      G6.registerBehavior("click-add-edge", {
+        // Set the events and the corresponding responsing function for this behavior
+        getEvents() {
+          return {
+            "node:click": "onClick", // The event is canvas:click, the responsing function is onClick
+            mousemove: "onMousemove", // The event is mousemove, the responsing function is onMousemove
+            "edge:click": "onEdgeClick" // The event is edge:click, the responsing function is onEdgeClick
+          };
+        },
+        // The responsing function for node:click defined in getEvents
+        onClick(ev) {
+          const self = this;
+          const node = ev.item;
+          const graph = self.graph;
+          // The position where the mouse clicks
+          const point = { x: ev.x, y: ev.y };
+          const model = node.getModel();
+          if (self.addingEdge && self.edge) {
+            graph.updateItem(self.edge, {
+              target: model.id
+            });
+
+            self.edge = null;
+            self.addingEdge = false;
+          } else {
+            // Add anew edge, the end node is the current node user clicks
+            self.edge = graph.addItem("edge", {
+              source: model.id,
+              target: point,
+              id: "edge" + that.addedCount,
+              label: "连接" + that.addedCount
+            });
+            that.commonOperation();
+            self.addingEdge = true;
+          }
+        },
+        // The responsing function for mousemove defined in getEvents
+        onMousemove(ev) {
+          const self = this;
+          // The current position the mouse clicks
+          const point = { x: ev.x, y: ev.y };
+          if (self.addingEdge && self.edge) {
+            // Update the end node to the current node the mouse clicks
+            self.graph.updateItem(self.edge, {
+              target: point
+            });
+          }
+        },
+        // The responsing function for edge:click defined in getEvents
+        onEdgeClick(ev) {
+          const self = this;
+          const currentEdge = ev.item;
+          if (self.addingEdge && self.edge === currentEdge) {
+            self.graph.removeItem(self.edge);
+            self.edge = null;
+            self.addingEdge = false;
+          }
+        }
+      });
+
+      let nodeW = $("#mountNode").width();
+      let nodeH = $("#mountNode").height();
+      // console.log(nodeW, nodeH);
+
+      let ratio = nodeW / nodeH;
+      let minimapH = 120;
+
+      const mgrid = new Grid();
       const minimap = new Minimap({
         // container: "minimap",
-        size: [100, 100],
+        size: [minimapH / ratio, minimapH],
+        // size: [70, 150],
         className: "minimap",
         type: "delegate"
         // delegateStyle: {
@@ -527,19 +628,15 @@ export default {
         // }
       });
       // console.log("Minimap", minimap);
-
-      let nodeW = $("#mountNode").width();
-      let nodeH = $("#mountNode").height();
-
       this.graph = new G6.Graph({
         container: "mountNode", // String | HTMLElement，必须，在 Step 1 中创建的容器 id 或容器本身
         width: nodeW, // Number，必须，图的宽度
         height: nodeH, // Number，必须，图的高度
         fitView: true,
         // fitViewPadding: [20, 40, 50, 20],
-        autoPaint: true,
-        plugins: [minimap, grid],
-        renderer: "svg",
+        // autoPaint: true,
+        plugins: [mgrid, minimap],
+        // renderer: "svg",
         modes: {
           default: [
             "drag-canvas",
@@ -572,6 +669,21 @@ export default {
                   </div>
                 </div>
                 `;
+              }
+            }
+          ],
+          addEdge: [
+            "click-add-edge",
+            "click-select",
+            "drag-canvas",
+            "zoom-canvas",
+            {
+              type: "brush-select",
+              includeEdges: false,
+              // trigger: "ctrl",
+              onSelect: nodes => {
+                this.selectedNodes = nodes;
+                this.selectedtype = "multi";
               }
             }
           ]
@@ -608,7 +720,7 @@ export default {
         evt.stopPropagation();
         this.showContextmenuType = "";
         this.showContextmenu = false;
-        this.graph.setMode("default");
+        // this.graph.setMode("default");
         this.selectedtype = "normal";
         this.selectedNodes = [];
       });
@@ -633,6 +745,7 @@ export default {
         $(".topology-contextmenu").css("top", evt.canvasY + "px");
         $(".topology-contextmenu").css("left", evt.canvasX + "px");
         this.showContextmenuType = "node";
+        this.mouseInfo = evt;
         if (this.selectedtype == "normal") {
           this.selectedNodes = [];
           this.selectedNodes.push(evt.item);
@@ -686,8 +799,52 @@ export default {
       this.graph.data(this.g6Data); // 读取 Step 2 中的数据源到图上
       this.graph.render(); // 渲染图
     },
+    modeChange(type) {
+      this.modeType = type;
+      this.graph.setMode(type);
+    },
+    createNewNodeAfterThisNode() {
+      let sourceId = "node" + this.addedCount;
+
+      this.addItem("node", {
+        id: sourceId, // String，该节点存在则必须，节点的唯一标识
+        label: "服务器" + this.addedCount,
+        img: facility,
+        type: "myimg",
+        size: 70,
+        // name: "node" + this.addedCount,
+        // draggable: true,
+        labelCfg: {
+          style: {
+            fontSize: 14
+          }
+        },
+        x: this.mouseInfo.x + 150, // Number，可选，节点位置的 x 值
+        y: this.mouseInfo.y // Number，可选，节点位置的 y 值
+      });
+
+      this.addItem("edge", {
+        source: this.selectedNodes[0].defaultCfg.id, // String，必须，起始点 id
+        target: sourceId, // String，必须，目标点 id
+        // style: {
+        //   endArrow: true,
+        //   // stroke: "RGB(95,99,104)",
+        //   lineWidth: 3
+        // },
+        label: "连接" + ++this.addedCount,
+        labelCfg: {
+          autoRotate: true,
+          refY: 10,
+          style: {
+            fontSize: 14
+          }
+        }
+      });
+
+      this.commonOperation();
+    },
     createNewNode() {
-      this.graph.addItem("node", {
+      this.addItem("node", {
         id: "node" + this.addedCount, // String，该节点存在则必须，节点的唯一标识
         label: "服务器" + this.addedCount,
         img: facility,
@@ -704,12 +861,7 @@ export default {
         y: this.mouseInfo.y // Number，可选，节点位置的 y 值
       });
 
-      this.addedCount++;
-      this.showContextmenu = false;
-      this.showContextmenuType = "";
-
-      this.graph.paint();
-      this.graph.setAutoPaint(true);
+      this.commonOperation();
     },
     removeNodes() {
       for (let i = 0; i < this.selectedNodes.length; i++) {
@@ -721,12 +873,7 @@ export default {
       }
 
       this.selectedNodes = [];
-
-      this.showContextmenu = false;
-      this.showContextmenuType = "";
-
-      this.graph.paint();
-      this.graph.setAutoPaint(true);
+      this.commonOperation();
     },
     createEdge() {
       let sourceNodeId = null;
@@ -746,7 +893,7 @@ export default {
         sourceNodeId = this.selectedNodes[1].defaultCfg.id;
       }
 
-      this.graph.addItem("edge", {
+      this.addItem("edge", {
         source: sourceNodeId, // String，必须，起始点 id
         target: this.selectedTargetNode.defaultCfg.id, // String，必须，目标点 id
         // style: {
@@ -763,21 +910,21 @@ export default {
           }
         }
       });
-
+    },
+    removeEdge() {
+      this.graph.removeItem(this.selectedEdge.defaultCfg.id);
+      this.commonOperation();
+    },
+    addItem(type, config) {
+      this.graph.addItem(type, config);
+      // this.commonOperation();
+    },
+    commonOperation() {
       this.addedCount++;
       this.showContextmenu = false;
       this.showContextmenuType = "";
       this.selectedTargetNode = null;
 
-      this.graph.paint();
-      this.graph.setAutoPaint(true);
-    },
-    removeEdge() {
-      this.graph.removeItem(this.selectedEdge.defaultCfg.id);
-      
-      this.selectedEdge = null;
-      this.showContextmenu = false;
-      this.showContextmenuType = "";
       this.graph.paint();
       this.graph.setAutoPaint(true);
     }
@@ -809,6 +956,9 @@ export default {
   right: 0;
   font-size: 13px;
 
+  .el-radio {
+    margin-right: 0 !important;
+  }
   .el-button--mini {
     padding: 6px;
   }
