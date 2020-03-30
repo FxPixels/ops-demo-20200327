@@ -3,21 +3,6 @@
     <div id="mountNode"></div>
     <div class="topology-node-tools">
       <!-- <span>工具栏</span> -->
-      <!-- <Button
-        size="mini"
-        type="primary"
-        icon="el-icon-circle-plus-outline"
-        @click="setMode('default')"
-        :plain="modeType != 'default'"
-        >常用模式</Button
-      >
-      <Button
-        size="mini"
-        type="primary"
-        icon="el-icon-sort"
-        @click="setMode('addEdge')"
-        >连线模式</Button
-      > -->
 
       <radio-group v-model="modeType" size="mini" @change="modeChange">
         <radio :label="'default'" border>常用模式</radio>
@@ -401,6 +386,7 @@ export default {
     };
   },
   methods: {
+    // 设置拓扑图
     setTopology() {
       // Register a custom behavior: add a node when user click the blank part of canvas
       const that = this;
@@ -545,7 +531,7 @@ export default {
             ); // 一次动画的时间长度
           }
         },
-        "line"
+        "quadratic"
       );
 
       // Register a custom behavior: click two end nodes to add an edge
@@ -580,7 +566,14 @@ export default {
               source: model.id,
               target: point,
               id: "edge" + that.addedCount,
-              label: "连接" + that.addedCount
+              label: "连接" + that.addedCount,
+              labelCfg: {
+                autoRotate: true,
+                refY: 10,
+                style: {
+                  fontSize: 14
+                }
+              }
             });
             that.commonOperation();
             self.addingEdge = true;
@@ -589,8 +582,7 @@ export default {
         // The responsing function for mousemove defined in getEvents
         onMousemove(ev) {
           const self = this;
-          // that.endAddEdge = false;
-          // console.log("self", self);
+
           // The current position the mouse clicks
           const point = { x: ev.x, y: ev.y };
           if (self.addingEdge && self.edge) {
@@ -599,21 +591,6 @@ export default {
               target: point
             });
           }
-          // else {
-          //   self.graph.removeItem(self.edge);
-          //   self.edge = null;
-          //   self.addingEdge = false;
-          // }
-
-          // console.log("self.edge", self.edge)
-
-          // if (!that.endAddEdge) {
-          //   let index = that.addedCount;
-          //   console.log(index);
-          //   that.graph.removeItem("edge" + index);
-          // } else {
-          //   that.endAddEdge = false;
-          // }
         },
         // The responsing function for edge:click defined in getEvents
         onEdgeClick(ev) {
@@ -818,6 +795,8 @@ export default {
       this.graph.data(this.g6Data); // 读取 Step 2 中的数据源到图上
       this.graph.render(); // 渲染图
     },
+
+    // 切换模式
     modeChange(type) {
       this.modeType = type;
       this.graph.setMode(type);
@@ -825,13 +804,15 @@ export default {
         if (!this.endAddEdge) {
           let index = this.addedCount - 1;
           const item = this.graph.findById("edge" + index);
-          console.log("item","edge" + index, item);
+          // console.log("item","edge" + index, item);
           this.graph.removeItem("edge" + index);
         } else {
           this.endAddEdge = false;
         }
       }
     },
+
+    // 从一节点新增下级节点
     createNewNodeAfterThisNode() {
       let sourceId = "node" + this.addedCount;
 
@@ -872,6 +853,8 @@ export default {
 
       this.commonOperation();
     },
+
+    // 新增节点
     createNewNode() {
       this.addItem("node", {
         id: "node" + this.addedCount, // String，该节点存在则必须，节点的唯一标识
@@ -892,6 +875,8 @@ export default {
 
       this.commonOperation();
     },
+
+    // 移除节点
     removeNodes() {
       for (let i = 0; i < this.selectedNodes.length; i++) {
         let item = this.selectedNodes[i].defaultCfg;
@@ -904,6 +889,8 @@ export default {
       this.selectedNodes = [];
       this.commonOperation();
     },
+
+    // 新增连线
     createEdge() {
       let sourceNodeId = null;
       let index = null;
@@ -940,6 +927,8 @@ export default {
         }
       });
     },
+
+    // 删除连线
     removeEdge() {
       this.graph.removeItem(this.selectedEdge.defaultCfg.id);
       this.commonOperation();
@@ -948,6 +937,8 @@ export default {
       this.graph.addItem(type, config);
       // this.commonOperation();
     },
+
+    // 操作之后要做的事情
     commonOperation() {
       this.addedCount++;
       this.showContextmenu = false;
@@ -1001,7 +992,7 @@ export default {
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
   border-radius: 5px;
   border: 1px solid #ebeef5;
-  min-width: 88px;
+  min-width: 188px;
   z-index: 100;
 
   & > p {
