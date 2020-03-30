@@ -926,6 +926,8 @@ export default {
           }
         }
       });
+
+      this.commonOperation();
     },
 
     // 删除连线
