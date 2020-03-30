@@ -97,6 +97,7 @@ export default {
       selectedNodes: [],
       selectedTargetNode: null,
       selectedEdge: null,
+      endAddEdge: false,
       modeType: "default",
       g6Data: {
         // 点集
@@ -510,7 +511,7 @@ export default {
             const sline = group.get("children")[1];
 
             // sline.attr("cursor", "pointer");
-            console.log(group.get("children")[1]);
+            // console.log(group.get("children")[1]);
             // 边 path 的起点位置
             const startPoint = shape.getPoint(0);
 
@@ -572,6 +573,7 @@ export default {
 
             self.edge = null;
             self.addingEdge = false;
+            that.endAddEdge = true;
           } else {
             // Add anew edge, the end node is the current node user clicks
             self.edge = graph.addItem("edge", {
@@ -587,6 +589,8 @@ export default {
         // The responsing function for mousemove defined in getEvents
         onMousemove(ev) {
           const self = this;
+          // that.endAddEdge = false;
+          // console.log("self", self);
           // The current position the mouse clicks
           const point = { x: ev.x, y: ev.y };
           if (self.addingEdge && self.edge) {
@@ -595,6 +599,21 @@ export default {
               target: point
             });
           }
+          // else {
+          //   self.graph.removeItem(self.edge);
+          //   self.edge = null;
+          //   self.addingEdge = false;
+          // }
+
+          // console.log("self.edge", self.edge)
+
+          // if (!that.endAddEdge) {
+          //   let index = that.addedCount;
+          //   console.log(index);
+          //   that.graph.removeItem("edge" + index);
+          // } else {
+          //   that.endAddEdge = false;
+          // }
         },
         // The responsing function for edge:click defined in getEvents
         onEdgeClick(ev) {
@@ -769,7 +788,7 @@ export default {
         $(".topology-contextmenu").css("left", evt.canvasX + "px");
         this.showContextmenuType = "edge";
         this.selectedEdge = evt.item;
-        // console.log(evt)
+        console.log(evt);
         this.mouseInfo = evt;
         this.showContextmenu = true;
       });
@@ -802,6 +821,16 @@ export default {
     modeChange(type) {
       this.modeType = type;
       this.graph.setMode(type);
+      if (type == "default") {
+        if (!this.endAddEdge) {
+          let index = this.addedCount - 1;
+          const item = this.graph.findById("edge" + index);
+          console.log("item","edge" + index, item);
+          this.graph.removeItem("edge" + index);
+        } else {
+          this.endAddEdge = false;
+        }
+      }
     },
     createNewNodeAfterThisNode() {
       let sourceId = "node" + this.addedCount;
