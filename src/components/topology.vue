@@ -821,7 +821,7 @@ export default {
     modeChange(type) {
       this.modeType = type;
       this.graph.setMode(type);
-      if (type == "default") {
+      if (type != "addEdge") {
         if (!this.endAddEdge) {
           let index = this.addedCount - 1;
           const item = this.graph.findById("edge" + index);
