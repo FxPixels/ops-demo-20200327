@@ -451,32 +451,6 @@ export default {
         border: 1px solid rgba(55, 166, 231, 0.5);
       }
 
-      .g6-tooltip {
-        padding: 8px;
-        color: #444;
-        box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-        border-radius: 5px;
-        border: 1px solid #ebeef5;
-        background-color: rgba(255, 255, 255, 0.8);
-
-        .g6-tooltip-html {
-          font-size: 13px;
-
-          & > div {
-            margin-bottom: 6px;
-
-            &:first-child {
-              span {
-                font-weight: bold;
-              }
-            }
-
-            &:last-child {
-              margin-bottom: 0;
-            }
-          }
-        }
-      }
     }
   }
 

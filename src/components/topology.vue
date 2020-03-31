@@ -1,5 +1,5 @@
 <template>
-  <div style="width:100%; height:100%;">
+  <div style="width:100%; height:100%;position:relative;">
     <div id="mountNode"></div>
     <div class="topology-node-tools">
       <!-- <span>工具栏</span> -->
@@ -39,6 +39,22 @@
         >删除所选节点</p>
       </div>
     </transition>
+
+    <div class="topology-tooltip" v-show="showToolTip">
+      <div
+        v-if="hoverNode"
+        class="topology-tooltip-content"
+        :id="'g6-tooltip-'+ hoverNode.id"
+      >
+        <div>
+          <i class="el-icon-coin"></i>
+          <span>{{hoverNode.label}}</span>
+        </div>
+        <div>
+          <p>Type: {{hoverNode.type}}</p>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 <script>
@@ -60,12 +76,14 @@ export default {
   data() {
     return {
       showContextmenu: false,
+      showToolTip: false,
       addedCount: 50,
       showContextmenuType: "",
       selectedtype: "normal",
       graph: null,
       mouseInfo: null,
       selectedNodes: [],
+      hoverNode: null,
       selectedTargetNode: null,
       selectedEdge: null,
       endAddEdge: false,
@@ -618,8 +636,9 @@ export default {
         // fitViewPadding: [20, 40, 50, 20],
         // autoPaint: true,
         plugins: [
-          // mgrid, 
-          minimap],
+          // mgrid,
+          minimap
+        ],
         // renderer: "svg",
         modes: {
           default: [
@@ -635,26 +654,26 @@ export default {
                 this.selectedNodes = nodes;
                 this.selectedtype = "multi";
               }
-            },
-            {
-              type: "tooltip",
-              formatText(model) {
-                // console.log(model);
-                return `
-                <div class="g6-tooltip-html" id="g6-tooltip-${model.id}">
-                  <div>
-                      <i class="el-icon-coin"></i>
-                    <span>
-                      ${model.label}
-                    </span>
-                  </div>
-                  <div>
-                    <p>Type: ${model.type}</p>
-                  </div>
-                </div>
-                `;
-              }
             }
+            // {
+            //   type: "tooltip",
+            //   formatText(model) {
+            //     // console.log(model);
+            //     return `
+            //     <div class="g6-tooltip-html" id="g6-tooltip-${model.id}">
+            //       <div>
+            //           <i class="el-icon-coin"></i>
+            //         <span>
+            //           ${model.label}
+            //         </span>
+            //       </div>
+            //       <div>
+            //         <p>Type: ${model.type}</p>
+            //       </div>
+            //     </div>
+            //     `;
+            //   }
+            // }
           ],
           addEdge: [
             "click-add-edge",
@@ -726,6 +745,7 @@ export default {
       this.graph.on("node:contextmenu", evt => {
         evt.preventDefault();
         evt.stopPropagation();
+        this.showToolTip = false
         $(".topology-contextmenu").css("top", evt.canvasY + "px");
         $(".topology-contextmenu").css("left", evt.canvasX + "px");
         this.showContextmenuType = "node";
@@ -763,6 +783,17 @@ export default {
         const model = node.getModel();
         model.oriLabel = model.label;
         this.graph.setItemState(node, "hover", true);
+        console.log(model);
+
+        const { x, y } = model;
+        const point = this.graph.getCanvasByPoint(x, y);
+
+        $(".topology-tooltip").css("top", point.y + 15 + "px");
+        $(".topology-tooltip").css("left", point.x - 75 + "px");
+
+        this.hoverNode = model;
+
+        this.showToolTip = true;
         // graph.updateItem(node, {
         //   preRect: {
         //     show: true
@@ -774,6 +805,9 @@ export default {
         const node = evt.item;
         const model = node.getModel();
         this.graph.setItemState(node, "hover", false);
+
+        this.hoverNode = null;
+        this.showToolTip = false;
         // graph.updateItem(node, {
         //   preRect: {
         //     show: true
@@ -869,9 +903,9 @@ export default {
       for (let i = 0; i < this.selectedNodes.length; i++) {
         let item = this.selectedNodes[i].defaultCfg;
         this.graph.removeItem(item.id);
-        $(`#g6-tooltip-${item.id}`)
-          .parent()
-          .remove();
+        // $(`#g6-tooltip-${item.id}`)
+        //   .parent()
+        //   .remove();
       }
 
       this.selectedNodes = [];
@@ -934,6 +968,7 @@ export default {
       this.showContextmenu = false;
       this.showContextmenuType = "";
       this.selectedTargetNode = null;
+      this.showToolTip = false
 
       this.graph.paint();
       this.graph.setAutoPaint(true);
@@ -946,16 +981,6 @@ export default {
     minimapEl.append(`
       <p class="mini-text" style="text-align:center">缩略图</p>
     `);
-
-    // console.log();
-    // $(".g6-grid")
-    //   .parent()
-    //   .css({ "z-index": 0 });
-    $(".g6-grid").css({
-      cssText: "transform: matrix(1, 0, 0, 1, 0, 0) ！important;"
-    });
-
-    // this.graph.refresh();
   }
 };
 </script>
@@ -969,6 +994,38 @@ export default {
   -ms-user-select: none;
   user-select: none;
   z-index: 1;
+}
+
+.topology-tooltip {
+  margin-left: 20px;
+  margin-top: 20px;
+  position: absolute;
+  padding: 8px;
+  color: #444;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  border: 1px solid #ebeef5;
+  background-color: rgba(255, 255, 255, 0.9);
+  z-index: 2;
+
+  .topology-tooltip-content {
+    font-size: 13px;
+
+    & > div {
+      margin-bottom: 6px;
+
+      &:first-child {
+        span {
+          font-weight: bold;
+          padding-left: 5px;
+        }
+      }
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
 }
 
 .topology-node-tools {
