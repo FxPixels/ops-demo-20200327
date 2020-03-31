@@ -14,27 +14,17 @@
 
     <transition name="el-zoom-in-top">
       <div class="topology-contextmenu" v-show="showContextmenu">
-        <p v-if="showContextmenuType == ''" @click="createNewNode">
-          新建一个节点
-        </p>
+        <p v-if="showContextmenuType == ''" @click="createNewNode">新建一个节点</p>
         <p
           v-if="showContextmenuType == 'node' && selectedtype == 'normal'"
           @click="createNewNodeAfterThisNode"
-        >
-          在本节点之后新建一个节点
-        </p>
-        <p v-if="showContextmenuType == 'node' && selectedtype == 'normal'">
-          修改该节点
-        </p>
+        >在本节点之后新建一个节点</p>
+        <p v-if="showContextmenuType == 'node' && selectedtype == 'normal'">修改该节点</p>
         <p
           v-if="showContextmenuType == 'node' && selectedtype == 'normal'"
           @click="removeNodes"
-        >
-          删除该节点
-        </p>
-        <p v-if="showContextmenuType == 'edge'" @click="removeEdge">
-          删除该连接
-        </p>
+        >删除该节点</p>
+        <p v-if="showContextmenuType == 'edge'" @click="removeEdge">删除该连接</p>
         <p
           v-if="
             showContextmenuType == 'node' &&
@@ -42,15 +32,11 @@
               selectedNodes.length == 2
           "
           @click="createEdge"
-        >
-          从另一个节点连接到本节点
-        </p>
+        >从另一个节点连接到本节点</p>
         <p
           v-if="showContextmenuType == 'node' && selectedtype == 'multi'"
           @click="removeNodes"
-        >
-          删除所选节点
-        </p>
+        >删除所选节点</p>
       </div>
     </transition>
   </div>
@@ -611,7 +597,7 @@ export default {
       let ratio = nodeW / nodeH;
       let minimapH = 120;
 
-      const mgrid = new Grid();
+      // const mgrid = new G6.Grid();
       const minimap = new Minimap({
         // container: "minimap",
         size: [minimapH / ratio, minimapH],
@@ -631,7 +617,9 @@ export default {
         fitView: true,
         // fitViewPadding: [20, 40, 50, 20],
         // autoPaint: true,
-        plugins: [mgrid, minimap],
+        plugins: [
+          // mgrid, 
+          minimap],
         // renderer: "svg",
         modes: {
           default: [
@@ -958,6 +946,16 @@ export default {
     minimapEl.append(`
       <p class="mini-text" style="text-align:center">缩略图</p>
     `);
+
+    // console.log();
+    // $(".g6-grid")
+    //   .parent()
+    //   .css({ "z-index": 0 });
+    $(".g6-grid").css({
+      cssText: "transform: matrix(1, 0, 0, 1, 0, 0) ！important;"
+    });
+
+    // this.graph.refresh();
   }
 };
 </script>
@@ -970,6 +968,7 @@ export default {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+  z-index: 1;
 }
 
 .topology-node-tools {
@@ -977,6 +976,7 @@ export default {
   top: 0;
   right: 0;
   font-size: 13px;
+  z-index: 1;
 
   .el-radio {
     margin-right: 0 !important;
@@ -996,6 +996,7 @@ export default {
   border: 1px solid #ebeef5;
   min-width: 188px;
   z-index: 100;
+  z-index: 2;
 
   & > p {
     padding: 0px 20px;
