@@ -41,11 +41,7 @@
     </transition>
 
     <div class="topology-tooltip" v-show="showToolTip">
-      <div
-        v-if="hoverNode"
-        class="topology-tooltip-content"
-        :id="'g6-tooltip-'+ hoverNode.id"
-      >
+      <div v-if="hoverNode" class="topology-tooltip-content" :id="'g6-tooltip-'+ hoverNode.id">
         <div>
           <i class="el-icon-coin"></i>
           <span>{{hoverNode.label}}</span>
@@ -65,6 +61,7 @@ import $ from "jquery";
 import { Button, Radio, RadioGroup } from "element-ui";
 import CollapseTransition from "element-ui/lib/transitions/collapse-transition";
 import "element-ui/lib/theme-chalk/base.css";
+import _ from "lodash";
 
 export default {
   components: {
@@ -557,16 +554,37 @@ export default {
           const point = { x: ev.x, y: ev.y };
           const model = node.getModel();
           if (self.addingEdge && self.edge) {
+            let edgeInfo = self.edge.defaultCfg;
+            let sourceId = edgeInfo.source.defaultCfg.id;
+            let isExist = that.g6Data.edges.some(item => {
+              return item.source == sourceId && item.target == model.id;
+            });
+
+            console.log(isExist, edgeInfo.id);
+
+            if (isExist) {
+              self.edge = null;
+              self.addingEdge = false;
+              that.endAddEdge = true;
+
+              graph.removeItem(edgeInfo.id);
+
+              return false;
+            }
+
             graph.updateItem(self.edge, {
               target: model.id
             });
+
+            that.commonOperation();
 
             self.edge = null;
             self.addingEdge = false;
             that.endAddEdge = true;
           } else {
             // Add anew edge, the end node is the current node user clicks
-            self.edge = graph.addItem("edge", {
+
+            let edgeInfo = {
               source: model.id,
               target: point,
               id: "edge" + that.addedCount,
@@ -578,8 +596,11 @@ export default {
                   fontSize: 14
                 }
               }
-            });
-            that.commonOperation();
+            };
+
+            that.g6Data.edges.push(edgeInfo);
+            self.edge = graph.addItem("edge", edgeInfo);
+
             self.addingEdge = true;
           }
         },
@@ -745,7 +766,7 @@ export default {
       this.graph.on("node:contextmenu", evt => {
         evt.preventDefault();
         evt.stopPropagation();
-        this.showToolTip = false
+        this.showToolTip = false;
         $(".topology-contextmenu").css("top", evt.canvasY + "px");
         $(".topology-contextmenu").css("left", evt.canvasX + "px");
         this.showContextmenuType = "node";
@@ -773,7 +794,7 @@ export default {
         $(".topology-contextmenu").css("left", evt.canvasX + "px");
         this.showContextmenuType = "edge";
         this.selectedEdge = evt.item;
-        console.log(evt);
+        // console.log(evt);
         this.mouseInfo = evt;
         this.showContextmenu = true;
       });
@@ -783,7 +804,7 @@ export default {
         const model = node.getModel();
         model.oriLabel = model.label;
         this.graph.setItemState(node, "hover", true);
-        console.log(model);
+        // console.log(model);
 
         const { x, y } = model;
         const point = this.graph.getCanvasByPoint(x, y);
@@ -824,10 +845,14 @@ export default {
       this.graph.setMode(type);
       if (type != "addEdge") {
         if (!this.endAddEdge) {
-          let index = this.addedCount - 1;
-          const item = this.graph.findById("edge" + index);
+          let index = this.addedCount;
+          let edgeId = "edge" + index;
+          const item = this.graph.findById(edgeId);
           // console.log("item","edge" + index, item);
-          this.graph.removeItem("edge" + index);
+          this.graph.removeItem(edgeId);
+          _.remove(this.g6Data.edges, o => {
+            return o.id == edgeId;
+          });
         } else {
           this.endAddEdge = false;
         }
@@ -856,6 +881,7 @@ export default {
       });
 
       this.addItem("edge", {
+        id: "edge" + this.addedCount,
         source: this.selectedNodes[0].defaultCfg.id, // String，必须，起始点 id
         target: sourceId, // String，必须，目标点 id
         // style: {
@@ -903,9 +929,9 @@ export default {
       for (let i = 0; i < this.selectedNodes.length; i++) {
         let item = this.selectedNodes[i].defaultCfg;
         this.graph.removeItem(item.id);
-        // $(`#g6-tooltip-${item.id}`)
-        //   .parent()
-        //   .remove();
+        _.remove(this.g6Data.nodes, o => {
+          return o.id == item.id;
+        });
       }
 
       this.selectedNodes = [];
@@ -954,10 +980,30 @@ export default {
 
     // 删除连线
     removeEdge() {
-      this.graph.removeItem(this.selectedEdge.defaultCfg.id);
+      let edgeId = this.selectedEdge.defaultCfg.id;
+
+      this.graph.removeItem(edgeId);
+
+      _.remove(this.g6Data.edges, o => {
+        return o.id == edgeId;
+      });
       this.commonOperation();
     },
     addItem(type, config) {
+      if (type == "node") {
+        this.g6Data.nodes.push(config);
+      } else if (type == "edge") {
+        let isExist = this.g6Data.edges.some(item => {
+          return item.source == config.source && item.target == config.target;
+        });
+
+        if (isExist) {
+          return false;
+        }
+
+        this.g6Data.edges.push(config);
+      }
+
       this.graph.addItem(type, config);
       // this.commonOperation();
     },
@@ -968,7 +1014,7 @@ export default {
       this.showContextmenu = false;
       this.showContextmenuType = "";
       this.selectedTargetNode = null;
-      this.showToolTip = false
+      this.showToolTip = false;
 
       this.graph.paint();
       this.graph.setAutoPaint(true);
