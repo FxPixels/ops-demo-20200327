@@ -560,7 +560,7 @@ export default {
               return item.source == sourceId && item.target == model.id;
             });
 
-            // console.log(isExist, edgeInfo.id);
+            console.log(isExist, edgeInfo.id);
 
             if (isExist) {
               self.edge = null;
@@ -568,6 +568,9 @@ export default {
               that.endAddEdge = true;
 
               graph.removeItem(edgeInfo.id);
+              _.remove(that.g6Data.edges, item=>{
+                return item.id == edgeInfo.id
+              })
 
               return false;
             }
