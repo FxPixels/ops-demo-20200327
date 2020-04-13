@@ -560,7 +560,7 @@ export default {
               return item.source == sourceId && item.target == model.id;
             });
 
-            console.log(isExist, edgeInfo.id);
+            // console.log(isExist, edgeInfo.id);
 
             if (isExist) {
               self.edge = null;
